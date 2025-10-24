@@ -21,22 +21,42 @@ class Answer{
   }
 }
 
-class Player{
-  String name;
-  Quiz quiz;
-  Player({required this.name, required this.quiz});
+// new: Submission to record a player's attempt
+class Submission {
+  String playerName;
+  List<Answer> answers;
+  int? score;
 
-  int get getScore => quiz.getScoreInPercentage();
-  int get getPoints => quiz.getPoints();
+  Submission({
+    required this.playerName,
+    required this.answers,
+    this.score,
+  });
+
+  void saveScore(String playerName, int score) {
+    this.playerName = playerName;
+    this.score = score;
+  }
+}
+
+class Player{
+  final String name;
+  Player({required this.name});
+  // Example helper: take a quiz by providing answers (does not mutate quiz state)
+  int takeQuizPoints(Quiz quiz, List<Answer> answers) {
+    final result = quiz.evaluateAnswers(answers);
+    return result['points']!;
+  }
 }
 
 class Quiz{
-  List<Question> questions;
-  List <Answer> answers =[];
+  final List<Question> questions;
+  final List <Answer> answers = [];
   final Map<String, int> playerScores = {};
+  final List<Submission> submissions = [];
 
-
-  Quiz({required this.questions});
+  Quiz({required List<Question> questions}):
+  questions = List.unmodifiable(questions);
 
   void addAnswer(Answer answer) {
      this.answers.add(answer);
@@ -60,9 +80,35 @@ class Quiz{
       }
     }
     return ((totalSCore/ questions.length)*100).toInt();
-
   }
   void clearAnswers(){
     answers.clear();
+  }
+  // Evaluate answers without mutating internal state
+  Map<String, int> evaluateAnswers(List<Answer> answersToEvaluate) {
+    int totalPoints = 0;
+    int totalCorrect = 0;
+    for (final answer in answersToEvaluate) {
+      if (answer.isGood()) {
+        totalPoints += answer.question.points;
+        totalCorrect++;
+      }
+    }
+    final percent = questions.isEmpty ? 0 : ((totalCorrect / questions.length) * 100).toInt();
+    return {'points': totalPoints, 'percent': percent};
+  }
+
+  // Convenience: submit a player's answers and save points to playerScores
+  Submission submitAnswersFor(String playerName, List<Answer> answersToEvaluate) {
+    final result = evaluateAnswers(answersToEvaluate);
+    final submission = Submission(
+      playerName: playerName,
+      answers: List.unmodifiable(answersToEvaluate),
+      points: result['points']!,
+      percent: result['percent']!,
+    );
+    playerScores[playerName] = submission.points;
+    submissions.add(submission);
+    return submission;
   }
 }

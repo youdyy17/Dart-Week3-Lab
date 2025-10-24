@@ -4,16 +4,17 @@ import '../domain/quiz.dart';
 
 class QuizConsole {
   final Quiz quiz;
+  final Submission submission;
   Player? player;
 
-  QuizConsole({required this.quiz});
+  QuizConsole({required this.quiz, required this.submission});
 
   // enter name before start quiz
   bool enterPlayerName() {
     stdout.write('Enter your name: ');
     String? name = stdin.readLineSync();
     if (name != null && name.trim().isNotEmpty) {
-      player = Player(name: name.trim() , quiz: quiz);
+      player = Player(name: name.trim());
       print('Your Name: ${player!.name}!\n');
       return true;
     } else {
@@ -25,8 +26,10 @@ class QuizConsole {
   void startQuiz() {
     while (true) {
       if (!enterPlayerName()) return;
-
+      
+      quiz.clearAnswers();
       print('--- Welcome to the Quiz ---\n');
+      //clear for fresh quiz
 
       for (var question in quiz.questions) {
         // print question and points on the same line
@@ -54,9 +57,9 @@ class QuizConsole {
 
       int totalPoints = quiz.getPoints();
       print('${player?.name}, Score in points: $totalPoints');
-      print('Your Name: ${player?.name}          Score: ${player?.getPoints}');
+      print('Your Name: ${player?.name}          Score: $totalPoints');
+      submission.saveScore(player!.name, totalPoints);
 
-      quiz.clearAnswers();
       player = null;
       print('\n');
     }

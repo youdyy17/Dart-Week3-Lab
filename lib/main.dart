@@ -1,4 +1,3 @@
- 
 import 'domain/quiz.dart';
 import 'ui/quiz_console.dart';
 
@@ -16,6 +15,7 @@ void main() {
   ];
 
   Quiz quiz = Quiz(questions: questions);
-  QuizConsole console = QuizConsole(quiz: quiz);
+  Submission submission = Submission(playerName: "", answers: []);
+  QuizConsole console = QuizConsole(quiz: quiz, submission: submission);
   console.startQuiz();
 }
